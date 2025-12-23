@@ -3,16 +3,12 @@ tasty_bytes:
   outputs:
     dev:
       type: snowflake
-      account: 'not needed'
-      user: 'not needed'
       role: accountadmin
       database: tasty_bytes_dbt_db
-      schema: dev
+      schema: dev_berend
       warehouse: SNOWFLAKE_LEARNING_WH
     prod:
       type: snowflake
-      account: 'not needed'
-      user: 'not needed'
       role: accountadmin
       database: tasty_bytes_dbt_db
       schema: prod

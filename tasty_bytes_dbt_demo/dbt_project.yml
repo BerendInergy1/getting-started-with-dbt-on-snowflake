@@ -1,8 +1,8 @@
 ## Project
-name: tasty_bytes
-version: "1.0"
+name: carglassnl_snowflake
+version: "1.0.0"
 config-version: 2
-profile: tasty_bytes
+profile: dynamics_snowflake
 
 ## Sources
 model-paths: [models]
@@ -17,56 +17,86 @@ target-path: target
 clean-targets: [target, dbt_modules]
 
 ## Models
-models:
-  tasty_bytes:
+models: 
+   dynamics_365_fo:
     staging:
       +materialized: view
+      +schema: staging
+      +tags: ['staging']
+    
     marts:
-      +materialized: table
+      +materialized: table  # Default for marts
+      +schema: marts
+      +tags: ['marts']
       
-## Snapshots
+      finance:
+        +materialized: incremental
+        +tags: ['finance', 'marts']
+      
+      sales:
+        +materialized: incremental
+        +tags: ['sales', 'marts']
+      
+      inventory:
+        +materialized: incremental
+        +tags: ['inventory', 'marts']
+
 snapshots:
-  tasty_bytes:
-    +dbt_valid_to_current: "to_timestamp('9999-12-31')"
-    +strategy: timestamp
-    # +hard_deletes: new_record
-    +snapshot_meta_column_names:
-      dbt_scd_id: ta_hash
-      dbt_updated_at: ta_update_datetime
-      dbt_valid_from: ek_start_datetime
-      dbt_valid_to: ea_end_datetime
-      dbt_is_deleted: ta_isdeleted_indicator
-    +post_hook:
-      - "alter table {{ this }} add column if not exists ta_actualstatus_indicator boolean"
-      - "alter table {{ this }} add column if not exists ta_lastdata_indicator boolean"
-      - "alter table {{ this }} add column if not exists ta_insert_datetime timestamp_ntz"
-      # Initialize all to false
-      - "update {{ this }} set ta_lastdata_indicator = false where ta_update_datetime >= '{{ run_started_at }}'"
+  dynamics_365_fo:
+    +target_schema: staging
+    +tags: ['snapshot']
+
+seeds:
+  dynamics_365_fo:
+    +schema: seeds
+
+vars:
+  source_database: 'DEV_NL_DYNAMICS_DB'
+  source_schema: 'DYN_SOURCE'   
+  
+## Snapshots Old
+# snapshots:
+#   tasty_bytes:
+#     +dbt_valid_to_current: "to_timestamp('9999-12-31')"
+#     +strategy: timestamp
+#     # +hard_deletes: new_record
+#     +snapshot_meta_column_names:
+#       dbt_scd_id: ta_hash
+#       dbt_updated_at: ta_update_datetime
+#       dbt_valid_from: ek_start_datetime
+#       dbt_valid_to: ea_end_datetime
+#       dbt_is_deleted: ta_isdeleted_indicator
+#     +post_hook:
+#       - "alter table {{ this }} add column if not exists ta_actualstatus_indicator boolean"
+#       - "alter table {{ this }} add column if not exists ta_lastdata_indicator boolean"
+#       - "alter table {{ this }} add column if not exists ta_insert_datetime timestamp_ntz"
+#       # Initialize all to false
+#       - "update {{ this }} set ta_lastdata_indicator = false where ta_update_datetime >= '{{ run_started_at }}'"
       
-      # Set true for last non-deleted version of each business key
-      # Logic: If not deleted AND (either currently active OR no newer non-deleted versions exist)
-      - |
-        update {{ this }}
-        set ta_lastdata_indicator = true
-        where ta_isdeleted_indicator = 'False'
-          and ta_hash in (
-            select ta_hash
-            from {{ this }} t1
-            where t1.ta_isdeleted_indicator = 'False'
-              and (
-                -- Case 1: Currently active (not deleted and valid to future)
-                t1.ea_end_datetime = to_timestamp('9999-12-31')
-                or
-                -- Case 2: Was valid but now superseded by a deleted version
-                exists (
-                  select 1 from {{ this }} t2
-                  where t2.ta_isdeleted_indicator = true
-                    and t2.ea_end_datetime = to_timestamp('9999-12-31')
-                    and t2.ek_start_datetime = t1.ea_end_datetime
-                )
-              )
-          )
+#       # Set true for last non-deleted version of each business key
+#       # Logic: If not deleted AND (either currently active OR no newer non-deleted versions exist)
+#       - |
+#         update {{ this }}
+#         set ta_lastdata_indicator = true
+#         where ta_isdeleted_indicator = 'False'
+#           and ta_hash in (
+#             select ta_hash
+#             from {{ this }} t1
+#             where t1.ta_isdeleted_indicator = 'False'
+#               and (
+#                 -- Case 1: Currently active (not deleted and valid to future)
+#                 t1.ea_end_datetime = to_timestamp('9999-12-31')
+#                 or
+#                 -- Case 2: Was valid but now superseded by a deleted version
+#                 exists (
+#                   select 1 from {{ this }} t2
+#                   where t2.ta_isdeleted_indicator = true
+#                     and t2.ea_end_datetime = to_timestamp('9999-12-31')
+#                     and t2.ek_start_datetime = t1.ea_end_datetime
+#                 )
+#               )
+#           )
       
-      # Set other indicators
-      - "update {{ this }} set ta_actualstatus_indicator = (ea_end_datetime = to_timestamp('9999-12-31'))"
-      - "update {{ this }} set ta_insert_datetime = coalesce(ta_insert_datetime, ek_start_datetime)"
+#       # Set other indicators
+#       - "update {{ this }} set ta_actualstatus_indicator = (ea_end_datetime = to_timestamp('9999-12-31'))"
+#       - "update {{ this }} set ta_insert_datetime = coalesce(ta_insert_datetime, ek_start_datetime)"

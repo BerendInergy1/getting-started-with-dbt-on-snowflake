@@ -1,0 +1,82 @@
+version: 2
+
+models:
+  - name: fct_sales_invoices
+    description: |
+      Sales invoice fact table containing both standard invoices (from sales orders via CustInvoiceJour) 
+      and free text invoices (manually created via CustInvoice).
+      
+      Contains invoice-level information only.
+    
+    config:
+      materialized: incremental
+      cluster_by: ['invoice_date', 'customer_id']
+      
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - sales_invoice_id
+            - sales_invoice_data_area_id
+    
+    columns:
+      - name: sales_invoice_id
+        description: "Unique system identifier (RECID) for the invoice"
+        tests:
+          - not_null
+      
+      - name: sales_invoice_data_area_id
+        description: "Company/legal entity identifier (data area ID)"
+        tests:
+          - not_null
+      
+      - name: invoice_id
+        description: "Business invoice number visible on customer invoices"
+        tests:
+          - not_null
+      
+      - name: invoice_date
+        description: "Official invoice posting date"
+        tests:
+          - not_null
+      
+      - name: due_date
+        description: "Payment due date"
+        tests:
+          - not_null
+      
+      - name: payment_terms_days
+        description: "Number of days between invoice date and due date"
+      
+      - name: sales_type
+        description: "Sales order type (e.g., Journal, Subscription, ReturnOrder). NULL for free text invoices."
+      
+      - name: currency
+        description: "Invoice currency code (ISO format)"
+        tests:
+          - not_null
+      
+      - name: invoice_amount_incl_vat
+        description: "Total invoice amount including VAT in accounting currency"
+        tests:
+          - not_null
+      
+      - name: customer_id
+        description: "Customer account number (invoice-to customer)"
+        tests:
+          - not_null
+      
+      - name: sales_order_id
+        description: "Source sales order number. NULL for free text invoices."
+      
+      - name: days_to_invoice
+        description: "Number of days from sales order creation to invoice posting. NULL for free text invoices."
+      
+      - name: last_modified_at
+        description: "Timestamp of last modification in source system"
+        tests:
+          - not_null
+      
+      - name: dbt_loaded_at
+        description: "Timestamp when record was loaded into this mart"
+        tests:
+          - not_null

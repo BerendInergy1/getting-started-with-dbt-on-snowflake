@@ -13,3 +13,14 @@ tasty_bytes:
       database: tasty_bytes_dbt_db
       schema: prod
       warehouse: SNOWFLAKE_LEARNING_WH
+
+
+dynamics_snowflake:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      role: accountadmin
+      database: tasty_bytes_dbt_db
+      schema: dev_berend
+      warehouse: SNOWFLAKE_LEARNING_WH

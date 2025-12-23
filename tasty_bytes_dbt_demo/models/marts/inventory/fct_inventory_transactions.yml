@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: fct_inventory_transactions
+    description: |
+      Fact table for inventory transactions including receipts, issues, and transfers.
+      Includes settlement information for FIFO/LIFO costing and origin document tracking.
+      Clustered by transaction date, item, and warehouse for optimal query performance.
+    
+    config:
+      materialized: incremental
+      cluster_by: ['transaction_date', 'item_id', 'warehouse']
+    
+    columns:
+      - name: inventory_trans_recid
+        description: "Unique identifier for inventory transaction"
+        tests:
+          - unique
+          - not_null
+      
+      - name: item_id
+        description: "Item number"
+        tests:
+          - not_null
+      
+      - name: transaction_date
+        description: "Financial date of the transaction"
+        tests:
+          - not_null
+      
+      - name: quantity
+        description: "Transaction quantity (negative for issues, positive for receipts)"
+        tests:
+          - not_null
+      
+      - name: transaction_type
+        description: "Type of transaction: Issue, Receipt, or Zero Transaction"
+        tests:
+          - accepted_values:
+              values: ['Issue', 'Receipt', 'Zero Transaction']
+      
+      - name: unit_cost
+        description: "Calculated unit cost for the transaction"
+      
+      - name: open_quantity
+        description: "Remaining unsettled quantity"

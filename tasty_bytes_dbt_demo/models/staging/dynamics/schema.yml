@@ -1,0 +1,186 @@
+version: 2
+
+models:
+  - name: generaljournal_entry_snapshot
+    description: "Historical snapshot of general journal entries with SCD Type 2 tracking"
+    columns:
+      - name: recid
+        description: "Unique record identifier"
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        description: "DBT-generated unique identifier for each snapshot version"
+        tests:
+          - unique
+          - not_null
+      - name: dbt_updated_at
+        description: "Timestamp when the record was last updated in source"
+        tests:
+          - not_null
+      - name: dbt_valid_from
+        description: "Timestamp when this version became valid"
+        tests:
+          - not_null
+      - name: dbt_valid_to
+        description: "Timestamp when this version became invalid (NULL for current version)"
+      - name: journalnumber
+        description: "Journal batch number"
+        tests:
+          - not_null
+      - name: accountingdate
+        description: "Accounting date of the entry"
+        tests:
+          - not_null
+  
+  - name: generaljournal_accountentry_snapshot
+    description: "Historical snapshot of journal account entries with line-level details"
+    columns:
+      - name: recid
+        description: "Unique record identifier"
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        tests:
+          - unique
+          - not_null
+      - name: generaljournalentry
+        description: "Foreign key to journal entry header"
+        tests:
+          - not_null
+      - name: accountingcurrencyamount
+        description: "Transaction amount in accounting currency"
+        tests:
+          - not_null
+  
+  - name: custtable_snapshot
+    description: "Historical snapshot of customer master data with SCD Type 2 tracking"
+    columns:
+      - name: recid
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        tests:
+          - unique
+          - not_null
+      - name: accountnum
+        description: "Customer account number"
+        tests:
+          - not_null
+      - name: custgroup
+        description: "Customer group"
+        tests:
+          - not_null
+  
+  - name: vendtable_snapshot
+    description: "Historical snapshot of vendor master data with SCD Type 2 tracking"
+    columns:
+      - name: recid
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        tests:
+          - unique
+          - not_null
+      - name: accountnum
+        description: "Vendor account number"
+        tests:
+          - not_null
+      - name: vendgroup
+        description: "Vendor group"
+        tests:
+          - not_null
+  
+  - name: inventtrans_snapshot
+    description: "Historical snapshot of inventory transactions"
+    columns:
+      - name: recid
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        tests:
+          - unique
+          - not_null
+      - name: itemid
+        description: "Item number"
+        tests:
+          - not_null
+      - name: qty
+        description: "Transaction quantity"
+        tests:
+          - not_null
+  
+  - name: salestable_snapshot
+    description: "Historical snapshot of sales orders"
+    columns:
+      - name: recid
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        tests:
+          - unique
+          - not_null
+      - name: salesid
+        description: "Sales order number"
+        tests:
+          - not_null
+      - name: custaccount
+        description: "Customer account"
+        tests:
+          - not_null
+  
+  - name: purchtable_snapshot
+    description: "Historical snapshot of purchase orders"
+    columns:
+      - name: recid
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        tests:
+          - unique
+          - not_null
+      - name: purchid
+        description: "Purchase order number"
+        tests:
+          - not_null
+      - name: orderaccount
+        description: "Vendor account"
+        tests:
+          - not_null
+
+  - name: custinvoice_snapshot
+    description: "Historical snapshot of free text customer invoices with SCD Type 2 tracking"
+    columns:
+      - name: recid
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        tests:
+          - unique
+          - not_null
+      - name: invoiceid
+        description: "Invoice number"
+        tests:
+          - not_null
+      - name: invoicedate
+        description: "Invoice date"
+        tests:
+          - not_null
+
+  - name: vendinvoice_snapshot
+    description: "Historical snapshot of free text vendor invoices with SCD Type 2 tracking"
+    columns:
+      - name: recid
+        tests:
+          - not_null
+      - name: dbt_scd_id
+        tests:
+          - unique
+          - not_null
+      - name: invoiceid
+        description: "Invoice number"
+        tests:
+          - not_null
+      - name: invoicedate
+        description: "Invoice date"
+        tests:
+          - not_null

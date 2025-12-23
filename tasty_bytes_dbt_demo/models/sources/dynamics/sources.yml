@@ -1,0 +1,457 @@
+version: 2
+
+sources:
+  - name: dynamics_365_fo
+    description: "Dynamics 365 Finance & Operations data synchronized from Microsoft Dataverse via Openflow"
+    database: DEV_NL_DYNAMICS_DB
+    schema: DYN_SOURCE
+    
+    # Define freshness at source level - can be overridden at table level
+    freshness:
+      warn_after: {count: 1, period: day}
+      error_after: {count: 2, period: day}
+    
+    loaded_at_field: MODIFIEDON
+    
+    tables:
+      # ==========================================
+      # GENERAL LEDGER TABLES (Transactional - 1 day)
+      # ==========================================
+      
+      - name: GeneralJournalEntry
+        description: "Header table for general journal entries in the general ledger. Contains high-level information about journal entries including posting dates, journal numbers, and accounting dates."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: JOURNALNUMBER
+            description: "The journal batch number"
+          - name: ACCOUNTINGDATE
+            description: "The date when the entry is recorded in accounting"
+          - name: POSTINGLAYER
+            description: "Posting layer (Current, Operations, Tax)"
+          - name: LEDGER
+            description: "Foreign key to Ledger table"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+          - name: CREATEDON
+            description: "Timestamp of record creation"
+      
+      - name: GeneralJournalAccountEntry
+        description: "Detail lines for general journal entries. Contains the actual debit/credit amounts, account combinations, and transaction descriptions for each journal line."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: GENERALJOURNALENTRY
+            description: "Foreign key to GeneralJournalEntry header"
+            tests:
+              - not_null
+          - name: LEDGERDIMENSION
+            description: "Foreign key to DimensionAttributeValueCombination"
+          - name: ACCOUNTINGCURRENCYAMOUNT
+            description: "Transaction amount in accounting currency"
+          - name: TRANSACTIONCURRENCYAMOUNT
+            description: "Transaction amount in original currency"
+          - name: TEXT
+            description: "Transaction description/text"
+          - name: TRANSACTIONCURRENCYCODE
+            description: "Currency code of the transaction"
+          - name: POSTINGTYPE
+            description: "Type of posting (e.g., Ledger, Customer, Vendor)"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+      
+      # Master data tables - less frequent updates (7 days)
+      - name: DimensionAttributeValueCombination
+        description: "Contains combinations of dimension values that form complete account structures (main account + dimensions). This is the core table for the account structure in D365."
+        freshness:
+          warn_after: {count: 7, period: day}
+          error_after: {count: 14, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: DISPLAYVALUE
+            description: "Full display value of the account combination (e.g., 110100-001-022-010)"
+          - name: MAINACCOUNT
+            description: "Foreign key to MainAccount table"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+      
+      - name: DimensionAttributeValue
+        description: "Individual dimension values (e.g., specific cost centers, departments, projects). Links dimension attribute definitions to their actual values."
+        freshness:
+          warn_after: {count: 7, period: day}
+          error_after: {count: 14, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: DIMENSIONATTRIBUTE
+            description: "Foreign key to dimension attribute definition"
+          - name: ENTITYINSTANCE
+            description: "Link to the entity instance (backing entity record)"
+          - name: DIMENSIONATTRIBUTEVALUECOMBINATION
+            description: "Foreign key to DimensionAttributeValueCombination"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+      
+      - name: SubledgerVoucherGeneralJournalEntry
+        description: "Bridge table linking subledger vouchers to general journal entries. Enables tracing from source documents to GL postings."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: GENERALJOURNALENTRY
+            description: "Foreign key to GeneralJournalEntry"
+            tests:
+              - not_null
+          - name: SUBLEDGERVOUCHER
+            description: "Subledger voucher number"
+          - name: SUBLEDGERVOUCHERDATAAREAID
+            description: "Company/legal entity ID"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+      
+      - name: MainAccount
+        description: "Chart of accounts main account definitions. Contains account numbers, names, types (P&L, Balance Sheet), and configuration."
+        freshness:
+          warn_after: {count: 7, period: day}
+          error_after: {count: 14, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: MAINACCOUNTID
+            description: "Main account number"
+            tests:
+              - not_null
+          - name: NAME
+            description: "Account name/description"
+          - name: TYPE
+            description: "Account type (Profit and Loss, Balance Sheet, etc.)"
+          - name: MAINACCOUNTCATEGORY
+            description: "Account category for reporting"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+      
+      - name: Ledger
+        description: "Ledger definitions including chart of accounts, fiscal calendar, accounting currency, and reporting currency setup."
+        freshness:
+          warn_after: {count: 30, period: day}
+          error_after: {count: 60, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: NAME
+            description: "Ledger name"
+          - name: CHARTOFACCOUNTS
+            description: "Chart of accounts assigned to this ledger"
+          - name: ACCOUNTINGCURRENCY
+            description: "Default accounting currency"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+      
+      # ==========================================
+      # INVENTORY TABLES (Transactional - 1 day)
+      # ==========================================
+      
+      - name: Inventtrans
+        description: "Inventory transactions recording all inventory movements (receipts, issues, transfers). Core table for inventory valuation and tracking."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: ITEMID
+            description: "Item number"
+            tests:
+              - not_null
+          - name: QTY
+            description: "Transaction quantity"
+          - name: COSTAMOUNTPOSTED
+            description: "Posted cost amount"
+          - name: DATEFINANCIAL
+            description: "Financial date of transaction"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+      
+      # ==========================================
+      # CUSTOMER TABLES
+      # ==========================================
+      
+      - name: Custtable
+        description: "Customer master data including customer account numbers, names, addresses, payment terms, and credit limits."
+        freshness:
+          warn_after: {count: 7, period: day}
+          error_after: {count: 14, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: ACCOUNTNUM
+            description: "Customer account number"
+            tests:
+              - unique
+              - not_null
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+      
+      - name: CustInvoiceJour
+        description: "Customer invoice journal (header). Posted customer invoices with totals, dates, and status."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: INVOICEID
+            description: "Invoice number"
+            tests:
+              - not_null
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+              
+      - name: CustInvoice
+        description: "Free text customer invoices created manually without sales orders. Alternative invoice header table for non-order based invoicing."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: INVOICEID
+            description: "Invoice number"
+            tests:
+              - not_null
+          - name: INVOICEDATE
+            description: "Invoice date"
+          - name: INVOICEACCOUNT
+            description: "Invoice customer account"
+          - name: INVOICEAMOUNT
+            description: "Invoice amount excluding VAT"
+          - name: INVOICEAMOUNTMST
+            description: "Invoice amount in accounting currency"
+          - name: SUMTAX
+            description: "Total tax/VAT amount"
+          - name: SUMTAXMST
+            description: "Total tax amount in accounting currency"
+          - name: CURRENCYCODE
+            description: "Invoice currency code"
+          - name: DUEDATE
+            description: "Payment due date"
+          - name: DATAAREAID
+            description: "Company/legal entity identifier"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+              
+      - name: CustInvoiceTrans
+        description: "Customer invoice transaction lines. Detail lines from posted invoices including items, quantities, prices, and discounts."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: INVOICEID
+            description: "Foreign key to invoice header"
+            tests:
+              - not_null
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+      
+      - name: Salestable
+        description: "Sales order headers. Contains customer information, delivery details, payment terms, and order totals."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: SALESID
+            description: "Sales order number"
+            tests:
+              - unique
+              - not_null
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+      
+      - name: CustTrans
+        description: "Customer ledger transactions. All postings to customer accounts including invoices, payments, credit notes, and adjustments."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+      
+      # ==========================================
+      # VENDOR TABLES
+      # ==========================================
+      
+      - name: VendTable
+        description: "Vendor master data including vendor account numbers, names, addresses, payment terms, and payment methods."
+        freshness:
+          warn_after: {count: 7, period: day}
+          error_after: {count: 14, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: ACCOUNTNUM
+            description: "Vendor account number"
+            tests:
+              - unique
+              - not_null
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+      
+      - name: VendinvoiceJour
+        description: "Vendor invoice journal (header). Posted vendor invoices with totals, dates, and status."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+
+      - name: VendInvoice
+        description: "Free text vendor invoices or invoice register entries. Alternative invoice header table for non-order based vendor invoicing."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: INVOICEID
+            description: "Invoice number"
+            tests:
+              - not_null
+          - name: INVOICEDATE
+            description: "Invoice date"
+          - name: INVOICEACCOUNT
+            description: "Invoice vendor account"
+          - name: INVOICEAMOUNT
+            description: "Invoice amount excluding VAT"
+          - name: INVOICEAMOUNTMST
+            description: "Invoice amount in accounting currency"
+          - name: SUMTAX
+            description: "Total tax/VAT amount"
+          - name: SUMTAXMST
+            description: "Total tax amount in accounting currency"
+          - name: CURRENCYCODE
+            description: "Invoice currency code"
+          - name: DUEDATE
+            description: "Payment due date"
+          - name: DATAAREAID
+            description: "Company/legal entity identifier"
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"
+            tests:
+              - not_null
+              
+      - name: PurchTable
+        description: "Purchase order headers. Contains vendor information, delivery details, payment terms, and order totals."
+        freshness:
+          warn_after: {count: 1, period: day}
+          error_after: {count: 2, period: day}
+        loaded_at_field: MODIFIEDON
+        columns:
+          - name: RECID
+            description: "Unique record identifier (Primary Key)"
+            tests:
+              - unique
+              - not_null
+          - name: MODIFIEDON
+            description: "Timestamp of last modification"

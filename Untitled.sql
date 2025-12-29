@@ -5,3 +5,6 @@ order by start_time desc
 ;
 
 drop view tasty_bytes_dbt_db.dev.raw_pos_franchise;
+
+select top 100 *
+from tasty_bytes_dbt_db.dev.tst_snapshot_deletes;

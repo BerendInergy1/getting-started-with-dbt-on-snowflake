@@ -5,13 +5,17 @@
     )
 }}
 
+/*
+Deze transformatie is enkel aangemaakt als voorbeeld. dynamics bevat in principe alleen snapshots omdat de dynamics source altijd de huidige stand laat zien.
+*/
+
 with account_entries as (
-    select * from {{ ref('generaljournal_accountentry_snapshot') }}
+    select * from {{ ref('stg_dyn_generaljournal_accountentry_snapshot') }}
     where dbt_valid_to is null
 ),
 
 dimension_combinations as (
-    select * from {{ ref('dimension_attributevaluecombination_snapshot') }}
+    select * from {{ ref('stg_dyn_dimension_attributevaluecombination_snapshot') }}
     where dbt_valid_to is null
 ),
 

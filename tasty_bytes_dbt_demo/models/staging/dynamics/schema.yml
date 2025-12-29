@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: generaljournal_entry_snapshot
+  - name: stg_dyn_generaljournal_entry_snapshot
     description: "Historical snapshot of general journal entries with SCD Type 2 tracking"
     columns:
       - name: recid
@@ -32,7 +32,7 @@ models:
         tests:
           - not_null
   
-  - name: generaljournal_accountentry_snapshot
+  - name: stg_dyn_generaljournal_accountentry_snapshot
     description: "Historical snapshot of journal account entries with line-level details"
     columns:
       - name: recid
@@ -52,7 +52,7 @@ models:
         tests:
           - not_null
   
-  - name: custtable_snapshot
+  - name: stg_dyn_custtable_snapshot
     description: "Historical snapshot of customer master data with SCD Type 2 tracking"
     columns:
       - name: recid
@@ -71,7 +71,7 @@ models:
         tests:
           - not_null
   
-  - name: vendtable_snapshot
+  - name: stg_dyn_vendtable_snapshot
     description: "Historical snapshot of vendor master data with SCD Type 2 tracking"
     columns:
       - name: recid
@@ -90,7 +90,7 @@ models:
         tests:
           - not_null
   
-  - name: inventtrans_snapshot
+  - name: stg_dyn_inventtrans_snapshot
     description: "Historical snapshot of inventory transactions"
     columns:
       - name: recid
@@ -109,7 +109,7 @@ models:
         tests:
           - not_null
   
-  - name: salestable_snapshot
+  - name: stg_dyn_salestable_snapshot
     description: "Historical snapshot of sales orders"
     columns:
       - name: recid
@@ -128,7 +128,7 @@ models:
         tests:
           - not_null
   
-  - name: purchtable_snapshot
+  - name: stg_dyn_purchtable_snapshot
     description: "Historical snapshot of purchase orders"
     columns:
       - name: recid
@@ -147,7 +147,7 @@ models:
         tests:
           - not_null
 
-  - name: custinvoice_snapshot
+  - name: stg_dyn_custinvoice_snapshot
     description: "Historical snapshot of free text customer invoices with SCD Type 2 tracking"
     columns:
       - name: recid
@@ -166,7 +166,7 @@ models:
         tests:
           - not_null
 
-  - name: vendinvoice_snapshot
+  - name: stg_dyn_vendinvoice_snapshot
     description: "Historical snapshot of free text vendor invoices with SCD Type 2 tracking"
     columns:
       - name: recid

@@ -9,7 +9,7 @@
 }}
 
 with standard_invoice_headers as (
-    select * from {{ ref('custinvoice_jour_snapshot') }}
+    select * from {{ ref('stg_dyn_custinvoice_jour_snapshot') }}
     where dbt_valid_to is null
     {% if is_incremental() %}
         and modifiedon >= (select max(last_modified_at) from {{ this }})
@@ -17,7 +17,7 @@ with standard_invoice_headers as (
 ),
 
 free_text_invoice_headers as (
-    select * from {{ ref('custinvoice_snapshot') }}
+    select * from {{ ref('stg_dyn_custinvoice_snapshot') }}
     where dbt_valid_to is null
     {% if is_incremental() %}
         and modifiedon >= (select max(last_modified_at) from {{ this }})

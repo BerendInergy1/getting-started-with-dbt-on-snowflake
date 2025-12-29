@@ -18,37 +18,41 @@ clean-targets: [target, dbt_modules]
 
 ## Models
 models: 
-   dynamics_365_fo:
-    staging:
-      +materialized: view
-      +schema: staging
-      +tags: ['staging']
+  staging:
+    +materialized: view
+    +schema: staging
+    +tags: ['staging']
+    dynamics:
+      +tags: ['dynamics']
     
-    marts:
-      +materialized: table  # Default for marts
-      +schema: marts
-      +tags: ['marts']
-      
-      finance:
-        +materialized: incremental
-        +tags: ['finance', 'marts']
-      
-      sales:
-        +materialized: incremental
-        +tags: ['sales', 'marts']
-      
-      inventory:
-        +materialized: incremental
-        +tags: ['inventory', 'marts']
+  marts:
+    +materialized: table  # Default for marts
+    +schema: mart
+    +tags: ['mart']
+    sales:
+      +materialized: incremental
+      +tags: ['sales']
+
+  Power BI:
+    +materialized: view
+    +tags: ['power bi']
+    Sales:
+      +materialized: view
+      +schema: PBI_sales
+      +tags: ['sales']
+    
 
 snapshots:
-  dynamics_365_fo:
-    +target_schema: staging
-    +tags: ['snapshot']
-
-seeds:
-  dynamics_365_fo:
-    +schema: seeds
+  +target_schema: staging
+  +tags: ['snapshot']
+  +dbt_valid_to_current: "to_timestamp('9999-12-31')"
+  +hard_deletes: new_record
+  +strategy: timestamp
+  Staging:
+    dynamics:
+      +updated_at: 'modified_on'
+      +schema: staging
+      +tags: ['dynamics']
 
 vars:
   source_database: 'DEV_NL_DYNAMICS_DB'

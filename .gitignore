@@ -2,4 +2,226 @@ tasty_bytes_dbt_demo/target/
 tasty_bytes_dbt_demo/dbt_packages/
 tasty_bytes_dbt_demo/logs/
 tasty_bytes_dbt_demo/profiles.yml
-/*.sql
+
+# =============================================================================
+# DBT PROJECT .GITIGNORE
+# Dynamics 365 F&O → Snowflake → dbt → Power BI
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# DBT CREDENTIALS - NEVER COMMIT!
+# -----------------------------------------------------------------------------
+profiles.yml
+.dbt/profiles.yml
+**/profiles.yml
+
+# -----------------------------------------------------------------------------
+# DBT ARTIFACTS & BUILD FILES
+# -----------------------------------------------------------------------------
+target/
+dbt_packages/
+logs/
+dbt_modules/
+
+# DBT artifacts (optional - sommige teams committen deze wel)
+manifest.json
+run_results.json
+catalog.json
+sources.json
+
+# -----------------------------------------------------------------------------
+# PYTHON & VIRTUAL ENVIRONMENTS
+# -----------------------------------------------------------------------------
+venv/
+env/
+.venv/
+.env/
+ENV/
+env.bak/
+venv.bak/
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+
+# -----------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES & SECRETS
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+secrets.yml
+secrets.yaml
+.secrets/
+
+# Snowflake connection files
+snowflake.json
+*_credentials.json
+
+# -----------------------------------------------------------------------------
+# IDE & EDITOR FILES
+# -----------------------------------------------------------------------------
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+.history/
+
+# JetBrains (PyCharm, DataGrip, IntelliJ)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.*.sw?
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# -----------------------------------------------------------------------------
+# OPERATING SYSTEM FILES
+# -----------------------------------------------------------------------------
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+# -----------------------------------------------------------------------------
+# DATA FILES (lokale test data)
+# -----------------------------------------------------------------------------
+*.csv
+*.parquet
+*.xlsx
+*.xls
+data/raw/
+data/temp/
+!seeds/*.csv  # Seeds wel committen
+
+# -----------------------------------------------------------------------------
+# DOCUMENTATION BUILD FILES
+# -----------------------------------------------------------------------------
+site/
+docs/_build/
+docs/.doctrees/
+
+# -----------------------------------------------------------------------------
+# LOGS & TEMPORARY FILES
+# -----------------------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+.cache/
+.pytest_cache/
+
+# -----------------------------------------------------------------------------
+# DBT CLOUD
+# -----------------------------------------------------------------------------
+.user.yml
+
+# -----------------------------------------------------------------------------
+# TESTING & COVERAGE
+# -----------------------------------------------------------------------------
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+.pytest_cache/
+coverage.xml
+*.coveragerc
+
+# -----------------------------------------------------------------------------
+# JUPYTER NOTEBOOKS (als je deze gebruikt voor analyses)
+# -----------------------------------------------------------------------------
+.ipynb_checkpoints/
+*.ipynb
+
+# -----------------------------------------------------------------------------
+# CUSTOM PROJECT SPECIFIC
+# -----------------------------------------------------------------------------
+
+# Lokale configuratie files
+config.local.yml
+local_settings.yml
+
+# Sandbox folders voor experimenten
+sandbox/
+scratch/
+experiments/
+
+# Output van custom scripts
+output/
+exports/
+
+# Backup files
+*.backup
+backups/
+
+# -----------------------------------------------------------------------------
+# PACKAGE MANAGERS
+# -----------------------------------------------------------------------------
+node_modules/
+package-lock.json
+yarn.lock
+
+# -----------------------------------------------------------------------------
+# GITLAB CI/CD ARTIFACTS (optioneel)
+# -----------------------------------------------------------------------------
+.gitlab-ci-local/
+
+# -----------------------------------------------------------------------------
+# SNOWFLAKE SPECIFIC
+# -----------------------------------------------------------------------------
+**/snowflake_connection.json
+**/snowflake_config.yml
